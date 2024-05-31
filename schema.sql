@@ -9,5 +9,6 @@ CREATE TABLE IF NOT EXISTS posts (
     posicion2 VARCHAR(100),
     numero INT NOT NULL,
     equipo VARCHAR(100) NOT NULL,
-    descripcion TEXT NOT NULL
+    descripcion TEXT NOT NULL,
+    supertecnica VARCHAR(100) NOT NULL,
 );
