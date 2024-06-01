@@ -45,7 +45,15 @@ app.get('/posts/:id', async (req, res) => {
   }
 })
 
-app.post('/posts', async (req, res) => {
+const validatePostData = (req, res, next) => {
+  const { nombre, posicion, posicion2, numero, equipo, descripcion, supertecnica } = req.body;
+  if (!nombre || !posicion || !posicion2 || !numero || !equipo || !descripcion || !supertecnica) {
+      return res.status(400).send('Invalid data format');
+  }
+  next();
+}
+
+app.post('/posts', validatePostData, async (req, res) => {
   try {
       const id = await createPost(req.body.nombre, req.body.posicion, req.body.posicion2, req.body.numero, req.body.equipo, req.body.descripcion, req.body.supertecnica)
       const post = await getPostById(id)
@@ -61,7 +69,7 @@ app.post('/posts', async (req, res) => {
   }
 })
 
-app.put('/posts/:id', async (req, res) => {
+app.put('/posts/:id', validatePostData, async (req, res) => {
   try {
       const affectedRows = await updatePostById(req.params.id, req.body.nombre, req.body.posicion, req.body.posicion2, req.body.numero, req.body.equipo, req.body.descripcion, req.body.supertecnica)
       if (affectedRows) {
@@ -99,4 +107,8 @@ app.delete('/posts/:id', async (req, res) => {
 
 app.all('*', (req, res) => {
   res.status(501).send('Not Implemented')
+})
+
+app.use((req, res) => {
+  res.status(400).send('Endpoint not found')
 })
