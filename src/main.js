@@ -1,114 +1,78 @@
-import express from 'express'
-import conn from './conn.js';
-import { getAllPosts, getPostById, createPost, updatePostById, deletePostById } from './db.js';
+import express from 'express';
+import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
 
-const app = express()
-const port = 3000
+import {
+  getAllPosts, getPostById, deletePostById, updatePostById, addPost,
+} from './db.js';
 
-app.use(express.json())
+const swaggerDocument = YAML.load('swagger.yaml');
 
-app.get('/', (req, res) => {
-  res.send('Hello from server')
-})
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-app.listen(port, () => {
-  console.log(`Server listening at http://127.0.0.1:${port}`)
-})
+app.use(cors());
 
-app.get('/posts', async (req, res) => {
-    const posts = await getAllPosts()
-    res.status(200).json(posts)
-})
+const app = express();
+app.use(express.json());
 
 app.get('/posts', async (req, res) => {
   try {
-      const posts = await getAllPosts()
-      res.status(200).json(posts)
+    const posts = await getAllPosts();
+    res.json(posts);
   } catch (error) {
-      console.error(error)
-      res.status(500).send('Error retrieving posts')
+    res.status(500).send({ error: error.message });
   }
-})
+});
 
 app.get('/posts/:id', async (req, res) => {
   try {
-      const post = await getPostById(req.params.id)
-      if (post) {
-          res.json(post)
-      }
-      else {
-          res.status(404).send('Post not found')
-      }
+    const post = await getPostById(req.params.id);
+    if (post) {
+      res.json(post);
+    } else {
+      res.status(404).send('Post not found');
+    }
   } catch (error) {
-      console.error(error)
-      res.status(500).send('Error retrieving post')
+    res.status(500).send('Internal Server Error');
   }
-})
-
-const validatePostData = (req, res, next) => {
-  const { nombre, posicion, posicion2, numero, equipo, descripcion, supertecnica } = req.body;
-  if (!nombre || !posicion || !posicion2 || !numero || !equipo || !descripcion || !supertecnica) {
-      return res.status(400).send('Invalid data format');
-  }
-  next();
-}
-
-app.post('/posts', validatePostData, async (req, res) => {
-  try {
-      const id = await createPost(req.body.nombre, req.body.posicion, req.body.posicion2, req.body.numero, req.body.equipo, req.body.descripcion, req.body.supertecnica)
-      const post = await getPostById(id)
-      if (post) {
-          res.status(200).json(post)
-      }
-      else {
-          res.status(404).send('Post not found')
-      }
-  } catch (error) {
-      console.error(error)
-      res.status(500).send('Error creating post')
-  }
-})
-
-app.put('/posts/:id', validatePostData, async (req, res) => {
-  try {
-      const affectedRows = await updatePostById(req.params.id, req.body.nombre, req.body.posicion, req.body.posicion2, req.body.numero, req.body.equipo, req.body.descripcion, req.body.supertecnica)
-      if (affectedRows) {
-          const post = await getPostById(req.params.id)
-          if (post) {
-              res.status(200).json(post)
-          }
-          else {
-              res.status(404).send('Post not found')
-          }
-      }
-      else {
-          res.status(404).send('Post not found/updated')
-      }
-  } catch (error) {
-      console.error(error)
-      res.status(500).send('Error updating post')
-  }
-})
+});
 
 app.delete('/posts/:id', async (req, res) => {
   try {
-      const affectedRows = await deletePostById(req.params.id)
-      if (affectedRows) {
-          res.status(204).send('Post deleted')
-      }
-      else {
-          res.status(404).send('Post not found')
-      }
+    const result = await deletePostById(req.params.id);
+    if (result.affectedRows > 0) {
+      res.send('Post deleted successfully');
+    } else {
+      res.status(404).send('Post not found');
+    }
   } catch (error) {
-      console.error(error)
-      res.status(500).send('Error deleting post')
+    res.status(500).send('Internal Server Error');
   }
-})
+});
 
-app.all('*', (req, res) => {
-  res.status(501).send('Not Implemented')
-})
+app.put('/posts/:id', async (req, res) => {
+  try {
+    const result = await updatePostById(req.params.id, req.body);
+    if (result.affectedRows > 0) {
+      res.send('Post updated successfully');
+    } else {
+      res.status(404).send('Post not found');
+    }
+  } catch (error) {
+    res.status(500).send('Internal Server Error');
+  }
+});
 
-app.use((req, res) => {
-  res.status(400).send('Endpoint not found')
-})
+app.post('/posts', async (req, res) => {
+  try {
+    const result = await addPost(req.body);
+    res.status(201).send(`Post added with ID: ${result.insertId}`);
+  } catch (error) {
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+app.listen(22434, () => {
+  console.log('Server is running on port 22434');
+});
