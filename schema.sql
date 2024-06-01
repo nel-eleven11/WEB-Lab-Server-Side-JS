@@ -1,5 +1,5 @@
-CREATE USER IF NOT EXISTS 'nelson'@'%' IDENTIFIED BY 'admin';
-GRANT ALL PRIVILEGES ON blog_nelson.* TO 'nelson'@'%' WITH GRANT OPTION;
+CREATE USER IF NOT EXISTS 'Admin'@'%' IDENTIFIED BY 'Admin';
+GRANT ALL PRIVILEGES ON blog_nelson.* TO 'Admin'@'%' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 
 CREATE TABLE IF NOT EXISTS posts (
@@ -10,5 +10,6 @@ CREATE TABLE IF NOT EXISTS posts (
     numero INT NOT NULL,
     equipo VARCHAR(100) NOT NULL,
     descripcion TEXT NOT NULL,
-    supertecnica VARCHAR(100) NOT NULL,
+    imagen TEXT NOT NULL,
+    supertecnica VARCHAR(100) NOT NULL
 );
